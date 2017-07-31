@@ -1,0 +1,2 @@
+# RabbitMqAkka
+RabbitMqAkka Example
