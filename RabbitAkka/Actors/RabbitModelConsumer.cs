@@ -1,11 +1,11 @@
 ﻿using Akka.Actor;
-using RabbitAkkaConsumerWithBusyExample.Messages;
+using RabbitAkka.Messages;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 
-namespace RabbitAkkaConsumerWithBusyExample.Actors
+namespace RabbitAkka.Actors
 {
-    class RabbitModelConsumer : ReceiveActor
+    public class RabbitModelConsumer : ReceiveActor
     {
         private readonly IModel _model;
         private readonly RequestModelConsumer _requestModelConsumer;

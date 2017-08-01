@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RabbitAkkaConsumerWithBusyE
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RabbitAkkaPublisherExample", "RabbitAkkaPublisherExample\RabbitAkkaPublisherExample.csproj", "{B42E0C61-2EE0-424B-BE13-0310CBE0BFD4}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RabbitAkka", "RabbitAkka\RabbitAkka.csproj", "{57BF80B8-7C4F-415E-8BA1-8E8976920087}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{B42E0C61-2EE0-424B-BE13-0310CBE0BFD4}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B42E0C61-2EE0-424B-BE13-0310CBE0BFD4}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B42E0C61-2EE0-424B-BE13-0310CBE0BFD4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{57BF80B8-7C4F-415E-8BA1-8E8976920087}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{57BF80B8-7C4F-415E-8BA1-8E8976920087}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{57BF80B8-7C4F-415E-8BA1-8E8976920087}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{57BF80B8-7C4F-415E-8BA1-8E8976920087}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

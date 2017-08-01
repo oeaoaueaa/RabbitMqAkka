@@ -1,6 +1,6 @@
-﻿namespace RabbitAkkaPublisherExample.Messages
+﻿namespace RabbitAkka.Messages
 {
-    class PublishMessage
+    public class PublishMessage
     {
         public PublishMessage(byte[] message)
         {

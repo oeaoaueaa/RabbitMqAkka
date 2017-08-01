@@ -1,10 +1,10 @@
 ﻿using Akka.Actor;
-using RabbitAkkaPublisherExample.Messages;
+using RabbitAkka.Messages;
 using RabbitMQ.Client;
 
-namespace RabbitAkkaPublisherExample.Actors
+namespace RabbitAkka.Actors
 {
-    class RabbitModelPublisher : ReceiveActor
+    public class RabbitModelPublisher : ReceiveActor
     {
         private readonly IModel _model;
         private readonly RequestModelPublisher _requestModelPublisher;

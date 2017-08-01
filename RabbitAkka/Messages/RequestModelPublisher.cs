@@ -1,8 +1,6 @@
-﻿using Akka.Actor;
-
-namespace RabbitAkkaPublisherExample.Messages
+﻿namespace RabbitAkka.Messages
 {
-    class RequestModelPublisher
+    public class RequestModelPublisher
     {
         public RequestModelPublisher(string exchangeName, string routingKey)
         {

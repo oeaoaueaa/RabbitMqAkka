@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Text;
 using Akka.Actor;
-using RabbitAkkaConsumerWithBusyExample.Actors;
-using RabbitAkkaConsumerWithBusyExample.Messages;
 using RabbitMQ.Client;
+using RabbitAkka.Actors;
+using RabbitAkka.Messages;
 
 namespace RabbitAkkaConsumerWithBusyExample
 {
@@ -33,14 +33,14 @@ namespace RabbitAkkaConsumerWithBusyExample
 
             var rabbitConnectionActorRef = actorSystem.ActorOf(RabbitConnection.CreateProps(factory));
 
-            var rabbitModelOne = rabbitConnectionActorRef.Ask<IActorRef>(new Messages.RequestModelConsumer(
+            var rabbitModelOne = rabbitConnectionActorRef.Ask<IActorRef>(new RequestModelConsumer(
                 exchangeName,
                 "xxx",//"one",
                 routingKey,
                 1,
                 consoleOutputOne)).Result;
 
-            var rabbitModelTwo = rabbitConnectionActorRef.Ask<IActorRef>(new Messages.RequestModelConsumer(
+            var rabbitModelTwo = rabbitConnectionActorRef.Ask<IActorRef>(new RequestModelConsumer(
                 exchangeName,
                 "xxx", //"two",
                 routingKey,

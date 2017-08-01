@@ -1,10 +1,10 @@
 ﻿using Akka.Actor;
-using RabbitAkkaPublisherExample.Messages;
+using RabbitAkka.Messages;
 using RabbitMQ.Client;
 
-namespace RabbitAkkaPublisherExample.Actors
+namespace RabbitAkka.Actors
 {
-    class RabbitConnection : ReceiveActor
+    public class RabbitConnection : ReceiveActor
     {
         private readonly IConnectionFactory _connectionFactory;
         private IConnection _conn;
@@ -23,6 +23,14 @@ namespace RabbitAkkaPublisherExample.Actors
         private void Ready()
         {
             _conn = _connectionFactory.CreateConnection();
+            Receive<RequestModelConsumer>(requestModel =>
+            {
+                var model = _conn.CreateModel();
+
+                var rabbitModelActorRef = Context.System.ActorOf(RabbitModelConsumer.CreateProps(model, requestModel));
+
+                Sender.Tell(rabbitModelActorRef);
+            });
             Receive<RequestModelPublisher>(requestModelPublisher =>
             {
                 var model = _conn.CreateModel();

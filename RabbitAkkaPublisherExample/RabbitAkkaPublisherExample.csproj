@@ -57,10 +57,6 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Actors\RabbitConnection.cs" />
-    <Compile Include="Actors\RabbitModelPublisher.cs" />
-    <Compile Include="Messages\PublishMessage.cs" />
-    <Compile Include="Messages\RequestModelPublisher.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
@@ -68,6 +64,11 @@
     <None Include="App.config" />
     <None Include="packages.config" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <ProjectReference Include="..\RabbitAkka\RabbitAkka.csproj">
+      <Project>{57BF80B8-7C4F-415E-8BA1-8E8976920087}</Project>
+      <Name>RabbitAkka</Name>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

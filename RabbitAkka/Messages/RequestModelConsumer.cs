@@ -1,8 +1,8 @@
 ﻿using Akka.Actor;
 
-namespace RabbitAkkaConsumerWithBusyExample.Messages
+namespace RabbitAkka.Messages
 {
-    class RequestModelConsumer
+    public class RequestModelConsumer
     {
         public RequestModelConsumer(string exchangeName, string queueName, string routingKey, int concurrencyLevel, IActorRef messageConsumer)
         {

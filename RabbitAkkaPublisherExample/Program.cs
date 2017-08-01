@@ -3,9 +3,9 @@ using System;
 using System.Text;
 using System.Threading.Tasks;
 using Akka.Actor;
-using RabbitAkkaPublisherExample.Actors;
-using RabbitAkkaPublisherExample.Messages;
 using RabbitMQ.Client;
+using RabbitAkka.Actors;
+using RabbitAkka.Messages;
 
 namespace RabbitAkkaPublisherExample
 {

@@ -4,10 +4,10 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{6F5D2BE1-8BD7-43AC-913A-23EAE75ECA3F}</ProjectGuid>
+    <ProjectGuid>{57BF80B8-7C4F-415E-8BA1-8E8976920087}</ProjectGuid>
     <OutputType>Exe</OutputType>
-    <RootNamespace>RabbitAkkaConsumerWithBusyExample</RootNamespace>
-    <AssemblyName>RabbitAkkaConsumerWithBusyExample</AssemblyName>
+    <RootNamespace>RabbitAkka</RootNamespace>
+    <AssemblyName>RabbitAkka</AssemblyName>
     <TargetFrameworkVersion>v4.5.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkProfile />
@@ -57,18 +57,20 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Actors\RabbitConnection.cs" />
+    <Compile Include="Actors\RabbitModelConsumer.cs" />
+    <Compile Include="Actors\RabbitModelPublisher.cs" />
+    <Compile Include="Messages\MessageProcessed.cs" />
+    <Compile Include="Messages\PublishMessage.cs" />
+    <Compile Include="Messages\RequestModelConsumer.cs" />
+    <Compile Include="Messages\RequestModelPublisher.cs" />
+    <Compile Include="Messages\RequestModelPublisherRemoteProcedureCall.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
     <None Include="packages.config" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\RabbitAkka\RabbitAkka.csproj">
-      <Project>{57BF80B8-7C4F-415E-8BA1-8E8976920087}</Project>
-      <Name>RabbitAkka</Name>
-    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
