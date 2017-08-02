@@ -24,9 +24,16 @@ namespace RabbitAkka.Actors
 
         private void Ready()
         {
-            Receive<PublishMessage>(publishMessage =>
+            Receive<PublishMessageUsingRoutingKey>(publishMessageUsingRoutingKey =>
             {
-                _model.BasicPublish(_requestModelPublisher.ExchangeName, _requestModelPublisher.RoutingKey, false, null, publishMessage.Message);
+                _model.BasicPublish(publishMessageUsingRoutingKey.ExchangeName,
+                    publishMessageUsingRoutingKey.RoutingKey, false, null, publishMessageUsingRoutingKey.Message);
+            });
+            Receive<PublishMessageUsingPublicationAddress>(publishMessageUsingPublicationAddress =>
+            {
+                // TODO needs correlation id!
+                _model.BasicPublish(publishMessageUsingPublicationAddress.PublicationAddress, null,
+                    publishMessageUsingPublicationAddress.Message);
             });
         }
     }

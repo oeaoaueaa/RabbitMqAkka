@@ -4,8 +4,9 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{57BF80B8-7C4F-415E-8BA1-8E8976920087}</ProjectGuid>
-    <OutputType>Exe</OutputType>
+    <ProjectGuid>{7651AAF5-25F9-430A-9228-6405264C891B}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>RabbitAkka</RootNamespace>
     <AssemblyName>RabbitAkka</AssemblyName>
     <TargetFrameworkVersion>v4.5.1</TargetFrameworkVersion>
@@ -13,7 +14,6 @@
     <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
@@ -23,7 +23,6 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
@@ -59,17 +58,20 @@
   <ItemGroup>
     <Compile Include="Actors\RabbitConnection.cs" />
     <Compile Include="Actors\RabbitModelConsumer.cs" />
+    <Compile Include="Actors\RabbitModelConsumerWithConcurrencyControl.cs" />
     <Compile Include="Actors\RabbitModelPublisher.cs" />
+    <Compile Include="Actors\RabbitModelRemoteProcedureCallPublisher.cs" />
+    <Compile Include="Messages\ConsumedMessage.cs" />
     <Compile Include="Messages\MessageProcessed.cs" />
-    <Compile Include="Messages\PublishMessage.cs" />
+    <Compile Include="Messages\PublishMessageUsingPublicationAddress.cs" />
+    <Compile Include="Messages\PublishMessageUsingRoutingKey.cs" />
     <Compile Include="Messages\RequestModelConsumer.cs" />
+    <Compile Include="Messages\RequestModelConsumerWithCocurrencyControl.cs" />
     <Compile Include="Messages\RequestModelPublisher.cs" />
     <Compile Include="Messages\RequestModelPublisherRemoteProcedureCall.cs" />
-    <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="App.config" />
     <None Include="packages.config" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

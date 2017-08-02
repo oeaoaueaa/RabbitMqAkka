@@ -2,19 +2,22 @@
 
 namespace RabbitAkka.Messages
 {
-    public class RequestModelConsumer
+    public class RequestModelConsumerWithConcurrencyControl
     {
-        public RequestModelConsumer(string exchangeName, string queueName, string routingKey, IActorRef messageConsumer)
+        public RequestModelConsumerWithConcurrencyControl(string exchangeName, string queueName, string routingKey, int concurrencyLevel, IActorRef messageConsumer)
         {
             ExchangeName = exchangeName;
             QueueName = queueName;
             RoutingKey = routingKey;
+            ConcurrencyLevel = concurrencyLevel;
             MessageConsumer = messageConsumer;
         }
 
         public string ExchangeName { get; }
         public string QueueName { get; }
         public string RoutingKey { get; }
+        public int ConcurrencyLevel { get; }
+
         public IActorRef MessageConsumer { get; }
     }
 }

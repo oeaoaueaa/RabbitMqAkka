@@ -9,7 +9,7 @@ using RabbitAkka.Messages;
 
 namespace RabbitAkkaPublisherExample
 {
-    class Program
+    partial class Program
     {
         static void Main(string[] args)
         {
@@ -23,7 +23,7 @@ namespace RabbitAkkaPublisherExample
                 VirtualHost = "/",
             };
 
-            const string exchangeName = "jc";
+            const string exchangeName = "amq.topic";
             const string routingKey = "routingKey";
 
 
@@ -31,18 +31,27 @@ namespace RabbitAkkaPublisherExample
 
             var rabbitConnectionActorRef = actorSystem.ActorOf(RabbitConnection.CreateProps(factory));
 
-            var rabbitModelPublisherActorRef =
-                rabbitConnectionActorRef.Ask<IActorRef>(new RequestModelPublisher(exchangeName, routingKey)).Result;
+            var requestModelPublisherActorRef =
+                rabbitConnectionActorRef.Ask<IActorRef>(new RequestModelPublisher()).Result;
+
+            var consoleOutputActorRef = actorSystem.ActorOf(ConsoleOutputActor.CreateProps());
+
+            var requestModelPublisherRemoteProcedureCallActorRef =
+                rabbitConnectionActorRef.Ask<IActorRef>(new RequestModelPublisherRemoteProcedureCall(exchangeName, routingKey, consoleOutputActorRef)).Result;
 
             string input = null;
             do
             {
-                if (input != null)
+                if (input?.StartsWith("?", StringComparison.CurrentCultureIgnoreCase) == true)
                 {
-                    rabbitModelPublisherActorRef.Tell(new PublishMessage(Encoding.ASCII.GetBytes(input)));
+                    requestModelPublisherRemoteProcedureCallActorRef.Tell(new PublishMessageUsingRoutingKey(exchangeName, routingKey, Encoding.ASCII.GetBytes(input.Substring(1))));
+                }
+                else if (input != null)
+                {
+                    requestModelPublisherActorRef.Tell(new PublishMessageUsingRoutingKey(exchangeName, routingKey, Encoding.ASCII.GetBytes(input)));
                 }
 
-                Console.WriteLine("type message (enter [q] to exit)");
+                Console.WriteLine("type message to send, prefix with [?] for rpc (enter [q] to exit)");
                 input = Console.ReadLine();                
             } while (!"q".Equals(input, StringComparison.CurrentCultureIgnoreCase));
 

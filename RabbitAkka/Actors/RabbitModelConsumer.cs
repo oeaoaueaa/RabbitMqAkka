@@ -11,7 +11,6 @@ namespace RabbitAkka.Actors
         private readonly RequestModelConsumer _requestModelConsumer;
         private EventingBasicConsumer _consumer;
         private string _consumerTag;
-        private int _concurrencyCapacity;
         private IActorRef _self;
 
         public static Props CreateProps(IModel model, RequestModelConsumer requestModelConsumer)
@@ -36,7 +35,6 @@ namespace RabbitAkka.Actors
 
         private void Ready()
         {
-            _concurrencyCapacity = _requestModelConsumer.ConcurrencyLevel;
             _model.QueueBind(_requestModelConsumer.QueueName, _requestModelConsumer.ExchangeName, _requestModelConsumer.RoutingKey);
             _consumer = new EventingBasicConsumer(_model);
             _consumer.Received += (ch, ea) =>
@@ -47,22 +45,7 @@ namespace RabbitAkka.Actors
 
             Receive<BasicDeliverEventArgs>(basicDeliverEventArgs =>
             {
-                if (_concurrencyCapacity > 0)
-                {
-                    _concurrencyCapacity--;
-                    // TODO handle timeouts, use basicDeliverEventArgs.DeliveryTag to track requests
-                    _requestModelConsumer.MessageConsumer.Tell(basicDeliverEventArgs.Body);
-                    _model.BasicAck(basicDeliverEventArgs.DeliveryTag, false);
-                }
-                else
-                {
-                    _model.BasicNack(basicDeliverEventArgs.DeliveryTag, true, true);
-                }
-            });
-            
-            Receive<MessageProcessed>(processed =>
-            {
-                _concurrencyCapacity++;
+                _requestModelConsumer.MessageConsumer.Tell(new ConsumedMessage(basicDeliverEventArgs.Body, basicDeliverEventArgs));
             });
         }
     }
