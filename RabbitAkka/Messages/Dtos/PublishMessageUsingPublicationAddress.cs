@@ -1,8 +1,8 @@
 ﻿using RabbitMQ.Client;
 
-namespace RabbitAkka.Messages
+namespace RabbitAkka.Messages.Dtos
 {
-    public class PublishMessageUsingPublicationAddress
+    public class PublishMessageUsingPublicationAddress : IPublishMessageUsingPublicationAddress
     {
         public PublishMessageUsingPublicationAddress(PublicationAddress publicationAddress, byte[] message)
         {

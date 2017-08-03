@@ -1,8 +1,8 @@
 ﻿using Akka.Actor;
 
-namespace RabbitAkka.Messages
+namespace RabbitAkka.Messages.Dtos
 {
-    public class RequestModelConsumerWithConcurrencyControl
+    public class RequestModelConsumerWithConcurrencyControl : IRequestModelConsumerWithConcurrencyControl
     {
         public RequestModelConsumerWithConcurrencyControl(string exchangeName, string queueName, string routingKey, int concurrencyLevel, IActorRef messageConsumer)
         {

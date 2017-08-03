@@ -1,5 +1,6 @@
 ﻿using Akka.Actor;
 using RabbitAkka.Messages;
+using RabbitAkka.Messages.Dtos;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
 
@@ -8,18 +9,18 @@ namespace RabbitAkka.Actors
     public class RabbitModelConsumerWithConcurrencyControl : ReceiveActor
     {
         private readonly IModel _model;
-        private readonly RequestModelConsumerWithConcurrencyControl _requestModelConsumerWithConcurrencyControl;
+        private readonly IRequestModelConsumerWithConcurrencyControl _requestModelConsumerWithConcurrencyControl;
         private EventingBasicConsumer _consumer;
         private string _consumerTag;
         private int _concurrencyCapacity;
         private IActorRef _self;
 
-        public static Props CreateProps(IModel model, RequestModelConsumerWithConcurrencyControl requestModelConsumerWithConcurrencyControl)
+        public static Props CreateProps(IModel model, IRequestModelConsumerWithConcurrencyControl requestModelConsumerWithConcurrencyControl)
         {
             return Props.Create<RabbitModelConsumerWithConcurrencyControl>(model, requestModelConsumerWithConcurrencyControl);
         }
 
-        public RabbitModelConsumerWithConcurrencyControl(IModel model, RequestModelConsumerWithConcurrencyControl requestModelConsumerWithConcurrencyControl)
+        public RabbitModelConsumerWithConcurrencyControl(IModel model, IRequestModelConsumerWithConcurrencyControl requestModelConsumerWithConcurrencyControl)
         {
             _model = model;
             _requestModelConsumerWithConcurrencyControl = requestModelConsumerWithConcurrencyControl;
@@ -60,7 +61,7 @@ namespace RabbitAkka.Actors
                 }
             });
             
-            Receive<MessageProcessed>(processed =>
+            Receive<IMessageProcessed>(processed =>
             {
                 _concurrencyCapacity++;
             });

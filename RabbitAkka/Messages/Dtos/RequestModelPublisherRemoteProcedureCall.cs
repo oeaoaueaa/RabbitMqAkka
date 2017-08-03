@@ -1,8 +1,8 @@
 using Akka.Actor;
 
-namespace RabbitAkka.Messages
+namespace RabbitAkka.Messages.Dtos
 {
-    public class RequestModelPublisherRemoteProcedureCall
+    public class RequestModelPublisherRemoteProcedureCall : IRequestModelPublisherRemoteProcedureCall
     {
         public RequestModelPublisherRemoteProcedureCall(string exchangeName, string routingKey, IActorRef messageConsumer)
         {

@@ -1,6 +1,7 @@
 ﻿namespace RabbitAkka.Messages
 {
-    public class MessageProcessed
+    public interface IMessageProcessed
     {
+        
     }
 }

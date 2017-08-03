@@ -7,29 +7,27 @@ namespace RabbitAkka.Actors
     public class RabbitModelPublisher : ReceiveActor
     {
         private readonly IModel _model;
-        private readonly RequestModelPublisher _requestModelPublisher;
 
-        public static Props CreateProps(IModel model, RequestModelPublisher requestModelPublisher)
+        public static Props CreateProps(IModel model, IRequestModelPublisher requestModelPublisher)
         {
             return Props.Create<RabbitModelPublisher>(model, requestModelPublisher);
         }
 
-        public RabbitModelPublisher(IModel model, RequestModelPublisher requestModelPublisher)
+        public RabbitModelPublisher(IModel model, IRequestModelPublisher requestModelPublisher)
         {
             _model = model;
-            _requestModelPublisher = requestModelPublisher;
 
             Ready();
         }
 
         private void Ready()
         {
-            Receive<PublishMessageUsingRoutingKey>(publishMessageUsingRoutingKey =>
+            Receive<IPublishMessageUsingRoutingKey>(publishMessageUsingRoutingKey =>
             {
                 _model.BasicPublish(publishMessageUsingRoutingKey.ExchangeName,
                     publishMessageUsingRoutingKey.RoutingKey, false, null, publishMessageUsingRoutingKey.Message);
             });
-            Receive<PublishMessageUsingPublicationAddress>(publishMessageUsingPublicationAddress =>
+            Receive<IPublishMessageUsingPublicationAddress>(publishMessageUsingPublicationAddress =>
             {
                 // TODO needs correlation id!
                 _model.BasicPublish(publishMessageUsingPublicationAddress.PublicationAddress, null,

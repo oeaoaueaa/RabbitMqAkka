@@ -61,14 +61,22 @@
     <Compile Include="Actors\RabbitModelConsumerWithConcurrencyControl.cs" />
     <Compile Include="Actors\RabbitModelPublisher.cs" />
     <Compile Include="Actors\RabbitModelRemoteProcedureCallPublisher.cs" />
-    <Compile Include="Messages\ConsumedMessage.cs" />
-    <Compile Include="Messages\MessageProcessed.cs" />
-    <Compile Include="Messages\PublishMessageUsingPublicationAddress.cs" />
-    <Compile Include="Messages\PublishMessageUsingRoutingKey.cs" />
-    <Compile Include="Messages\RequestModelConsumer.cs" />
-    <Compile Include="Messages\RequestModelConsumerWithCocurrencyControl.cs" />
-    <Compile Include="Messages\RequestModelPublisher.cs" />
-    <Compile Include="Messages\RequestModelPublisherRemoteProcedureCall.cs" />
+    <Compile Include="Messages\Dtos\ConsumedMessage.cs" />
+    <Compile Include="Messages\Dtos\MessageProcessed.cs" />
+    <Compile Include="Messages\Dtos\PublishMessageUsingPublicationAddress.cs" />
+    <Compile Include="Messages\Dtos\PublishMessageUsingRoutingKey.cs" />
+    <Compile Include="Messages\Dtos\RequestModelConsumer.cs" />
+    <Compile Include="Messages\Dtos\RequestModelConsumerWithCocurrencyControl.cs" />
+    <Compile Include="Messages\Dtos\RequestModelPublisher.cs" />
+    <Compile Include="Messages\Dtos\RequestModelPublisherRemoteProcedureCall.cs" />
+    <Compile Include="Messages\IConsumedMessage.cs" />
+    <Compile Include="Messages\IMessageProcessed.cs" />
+    <Compile Include="Messages\IPublishMessageUsingPublicationAddress.cs" />
+    <Compile Include="Messages\IPublishMessageUsingRoutingKey.cs" />
+    <Compile Include="Messages\IRequestModelConsumer.cs" />
+    <Compile Include="Messages\IRequestModelConsumerWithConcurrencyControl.cs" />
+    <Compile Include="Messages\IRequestModelPublisher.cs" />
+    <Compile Include="Messages\IRequestModelPublisherRemoteProcedureCall.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

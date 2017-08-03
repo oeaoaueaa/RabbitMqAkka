@@ -1,6 +1,7 @@
 ﻿using System;
 using Akka.Actor;
 using RabbitAkka.Messages;
+using RabbitAkka.Messages.Dtos;
 using RabbitMQ.Client;
 
 namespace RabbitAkka.Actors
@@ -8,15 +9,15 @@ namespace RabbitAkka.Actors
     public class RabbitModelRemoteProcedureCallPublisher : ReceiveActor, IWithUnboundedStash
     {
         private readonly IModel _model;
-        private readonly RequestModelPublisherRemoteProcedureCall _requestModelPublisherRemoteProcedureCall;
+        private readonly IRequestModelPublisherRemoteProcedureCall _requestModelPublisherRemoteProcedureCall;
         private readonly string _routingRpcReplyKey;
 
-        public static Props CreateProps(IModel model, RequestModelPublisherRemoteProcedureCall requestModelPublisherRemoteProcedureCall, string routingRpcReplyKey)
+        public static Props CreateProps(IModel model, IRequestModelPublisherRemoteProcedureCall requestModelPublisherRemoteProcedureCall, string routingRpcReplyKey)
         {
             return Props.Create<RabbitModelRemoteProcedureCallPublisher>(model, requestModelPublisherRemoteProcedureCall, routingRpcReplyKey);
         }
 
-        public RabbitModelRemoteProcedureCallPublisher(IModel model, RequestModelPublisherRemoteProcedureCall requestModelPublisherRemoteProcedureCall, string routingRpcReplyKey)
+        public RabbitModelRemoteProcedureCallPublisher(IModel model, IRequestModelPublisherRemoteProcedureCall requestModelPublisherRemoteProcedureCall, string routingRpcReplyKey)
         {
             _model = model;
             _requestModelPublisherRemoteProcedureCall = requestModelPublisherRemoteProcedureCall;
@@ -27,7 +28,7 @@ namespace RabbitAkka.Actors
 
         private void Ready()
         {
-            Receive<PublishMessageUsingRoutingKey>(publishMessage =>
+            Receive<IPublishMessageUsingRoutingKey>(publishMessage =>
             {
                 var corrId = Guid.NewGuid().ToString();
                 var props = _model.CreateBasicProperties();
@@ -45,7 +46,7 @@ namespace RabbitAkka.Actors
                     props, 
                     publishMessage.Message);
             });
-            Receive<ConsumedMessage>(consumedMessage =>
+            Receive<IConsumedMessage>(consumedMessage =>
             {
                 _requestModelPublisherRemoteProcedureCall.MessageConsumer.Tell(new ConsumedMessage(consumedMessage.Message, consumedMessage.BasicDeliverEventArgs));
             });

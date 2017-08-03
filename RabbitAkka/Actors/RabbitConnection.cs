@@ -1,6 +1,7 @@
 ﻿using System;
 using Akka.Actor;
 using RabbitAkka.Messages;
+using RabbitAkka.Messages.Dtos;
 using RabbitMQ.Client;
 
 namespace RabbitAkka.Actors
@@ -24,7 +25,7 @@ namespace RabbitAkka.Actors
         private void Ready()
         {
             _conn = _connectionFactory.CreateConnection();
-            Receive<RequestModelConsumer>(requestModel =>
+            Receive<IRequestModelConsumer>(requestModel =>
             {
                 var model = _conn.CreateModel();
 
@@ -32,7 +33,7 @@ namespace RabbitAkka.Actors
 
                 Sender.Tell(rabbitModelConsumerActorRef);
             });
-            Receive<RequestModelConsumerWithConcurrencyControl>(requestModel =>
+            Receive<IRequestModelConsumerWithConcurrencyControl>(requestModel =>
             {
                 var model = _conn.CreateModel();
 
@@ -40,7 +41,7 @@ namespace RabbitAkka.Actors
 
                 Sender.Tell(rabbitModelConsumerWithConcurrencyControlActorRef);
             });
-            Receive<RequestModelPublisher>(requestModelPublisher =>
+            Receive<IRequestModelPublisher>(requestModelPublisher =>
             {
                 var model = _conn.CreateModel();
 
@@ -48,7 +49,7 @@ namespace RabbitAkka.Actors
 
                 Sender.Tell(rabbitModelPublisherActorRef);
             });
-            Receive<RequestModelPublisherRemoteProcedureCall>(requestModelPublisherRemoteProcedureCall =>
+            Receive<IRequestModelPublisherRemoteProcedureCall>(requestModelPublisherRemoteProcedureCall =>
             {
                 var model = _conn.CreateModel();
 

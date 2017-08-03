@@ -1,6 +1,6 @@
-﻿namespace RabbitAkka.Messages
+﻿namespace RabbitAkka.Messages.Dtos
 {
-    public class PublishMessageUsingRoutingKey
+    public class PublishMessageUsingRoutingKey : IPublishMessageUsingRoutingKey
     {
         public PublishMessageUsingRoutingKey(string exchangeName, string routingKey, byte[] message)
         {

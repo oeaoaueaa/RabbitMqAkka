@@ -22,7 +22,7 @@ namespace RabbitAkkaPublisherExample
 
             private void Ready()
             {
-                Receive<ConsumedMessage>(consumedMessage =>
+                Receive<IConsumedMessage>(consumedMessage =>
                 {
                     var messageBody = Encoding.ASCII.GetString(consumedMessage.Message);
 

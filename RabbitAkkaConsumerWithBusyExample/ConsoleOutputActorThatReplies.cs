@@ -3,6 +3,7 @@ using System.Text;
 using Akka.Actor;
 using RabbitMQ.Client;
 using RabbitAkka.Messages;
+using RabbitAkka.Messages.Dtos;
 
 namespace RabbitAkkaConsumerWithBusyExample
 {
@@ -30,7 +31,7 @@ namespace RabbitAkkaConsumerWithBusyExample
 
             private void Ready()
             {
-                Receive<ConsumedMessage>(consumedMessage =>
+                Receive<IConsumedMessage>(consumedMessage =>
                 {
                     var messageBody = Encoding.ASCII.GetString(consumedMessage.Message);
 

@@ -1,8 +1,8 @@
 ﻿using Akka.Actor;
 
-namespace RabbitAkka.Messages
+namespace RabbitAkka.Messages.Dtos
 {
-    public class RequestModelConsumer
+    public class RequestModelConsumer : IRequestModelConsumer
     {
         public RequestModelConsumer(string exchangeName, string queueName, string routingKey, IActorRef messageConsumer)
         {

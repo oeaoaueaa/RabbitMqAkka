@@ -1,8 +1,8 @@
 ﻿using RabbitMQ.Client.Events;
 
-namespace RabbitAkka.Messages
+namespace RabbitAkka.Messages.Dtos
 {
-    public class ConsumedMessage
+    public class ConsumedMessage : IConsumedMessage
     {
         public BasicDeliverEventArgs BasicDeliverEventArgs { get; }
 
