@@ -1,4 +1,5 @@
-﻿using Akka.Actor;
+﻿using System;
+using Akka.Actor;
 using RabbitAkka.Messages;
 using RabbitAkka.Messages.Dtos;
 using RabbitMQ.Client;
@@ -29,8 +30,17 @@ namespace RabbitAkka.Actors
 
             ReceiveAny(_ =>
             {
-                _self = Self;
-                Become(Ready);
+                try
+                {
+                    _self = Self;
+
+                    Become(Ready);
+                    Sender.Tell(true);
+                }
+                catch (Exception)
+                {
+                    Sender.Tell(false);
+                }
             });
         }
 
@@ -43,7 +53,7 @@ namespace RabbitAkka.Actors
             {
                 _self.Tell(ea);
             };
-            //_consumerTag = _model.BasicConsume(_requestModelConsumer.QueueName, false, _consumer);
+            
             _consumerTag = _model.BasicConsume(_requestModelConsumer.QueueName, false, "", false, false, null, _consumer);
 
             Receive<BasicDeliverEventArgs>(basicDeliverEventArgs =>

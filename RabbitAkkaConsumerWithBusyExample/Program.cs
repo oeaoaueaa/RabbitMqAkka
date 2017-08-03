@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading.Tasks;
 using Akka.Actor;
 using RabbitMQ.Client;
 using RabbitAkka.Actors;
@@ -48,8 +49,8 @@ namespace RabbitAkkaConsumerWithBusyExample
                 3,
                 consoleOutputTwo)).Result;
 
-            rabbitModelOne.Tell("start");
-            rabbitModelTwo.Tell("start");
+            Task.WaitAll(rabbitModelOne.Ask<bool>("start"),
+                         rabbitModelTwo.Ask<bool>("start"));
 
             Console.ReadLine();
         }

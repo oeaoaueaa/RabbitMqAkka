@@ -1,11 +1,9 @@
-﻿
-using System;
+﻿using System;
 using System.Text;
 using System.Threading.Tasks;
 using Akka.Actor;
 using RabbitMQ.Client;
 using RabbitAkka.Actors;
-using RabbitAkka.Messages;
 using RabbitAkka.Messages.Dtos;
 
 namespace RabbitAkkaPublisherExample
