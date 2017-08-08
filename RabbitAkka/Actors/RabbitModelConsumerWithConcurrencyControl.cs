@@ -1,4 +1,5 @@
-﻿using Akka.Actor;
+﻿using System;
+using Akka.Actor;
 using RabbitAkka.Messages;
 using RabbitAkka.Messages.Dtos;
 using RabbitMQ.Client;
@@ -30,8 +31,17 @@ namespace RabbitAkka.Actors
 
             ReceiveAny(_ =>
             {
-                _self = Self;
-                Become(Ready);
+                try
+                {
+                    _self = Self;
+
+                    Become(Ready);
+                    Sender.Tell(true);
+                }
+                catch (Exception)
+                {
+                    Sender.Tell(false);
+                }
             });
         }
 

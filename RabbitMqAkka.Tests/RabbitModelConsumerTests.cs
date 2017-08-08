@@ -13,7 +13,7 @@ namespace RabbitMqAkka.Tests
     public class RabbitModelConsumerTests : TestKit
     {
         [Test]
-        public async void RequestModelConsumerTest()
+        public async void RabbitModelConsumerTest()
         {
             // Arrange 
             byte[] messageBody = { 0xBE, 0xBE };
@@ -47,7 +47,6 @@ namespace RabbitMqAkka.Tests
             Assert.IsTrue(started);
             messageConsumerActorRef.ExpectMsg<IConsumedMessage>(
                 consumedMessage => consumedMessage.Message == messageBody);
-
         }
     }
 }
