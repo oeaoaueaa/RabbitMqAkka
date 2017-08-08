@@ -73,6 +73,7 @@
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RabbitConnectionTests.cs" />
+    <Compile Include="RabbitModelPublisherTests.cs" />
     <Compile Include="RabbitModelConsumerWithConcurrencyControlTests.cs" />
     <Compile Include="RabbitModelConsumerTests.cs" />
   </ItemGroup>
