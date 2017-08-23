@@ -33,6 +33,11 @@ namespace RabbitAkka.Actors
                 _model.BasicPublish(publishMessageUsingPublicationAddress.PublicationAddress, null,
                     publishMessageUsingPublicationAddress.Message);
             });
+            Receive<IPublishMessageToQueue>(publishMessageToQueue =>
+            {
+                _model.BasicPublish(string.Empty,
+                    publishMessageToQueue.QueueName, false, null, publishMessageToQueue.Message);
+            });
         }
     }
 }

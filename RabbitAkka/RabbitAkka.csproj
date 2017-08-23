@@ -63,6 +63,7 @@
     <Compile Include="Actors\RabbitModelRemoteProcedureCallPublisher.cs" />
     <Compile Include="Messages\Dtos\ConsumedMessage.cs" />
     <Compile Include="Messages\Dtos\MessageProcessed.cs" />
+    <Compile Include="Messages\Dtos\PublishMessageToQueue.cs" />
     <Compile Include="Messages\Dtos\PublishMessageUsingPublicationAddress.cs" />
     <Compile Include="Messages\Dtos\PublishMessageUsingRoutingKey.cs" />
     <Compile Include="Messages\Dtos\RequestModelConsumer.cs" />
@@ -71,6 +72,7 @@
     <Compile Include="Messages\Dtos\RequestModelPublisherRemoteProcedureCall.cs" />
     <Compile Include="Messages\IConsumedMessage.cs" />
     <Compile Include="Messages\IMessageProcessed.cs" />
+    <Compile Include="Messages\IPublishMessageToQueue.cs" />
     <Compile Include="Messages\IPublishMessageUsingPublicationAddress.cs" />
     <Compile Include="Messages\IPublishMessageUsingRoutingKey.cs" />
     <Compile Include="Messages\IRequestModelConsumer.cs" />

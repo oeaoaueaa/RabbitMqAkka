@@ -46,6 +46,24 @@ namespace RabbitAkka.Actors
                     props, 
                     publishMessage.Message);
             });
+            Receive<IPublishMessageToQueue>(publishMessageToQueue =>
+            {
+                var corrId = Guid.NewGuid().ToString();
+                var props = _model.CreateBasicProperties();
+                //TODO CREATE A QUEUE AND ASK TO REPLY THERE :)
+                props.CorrelationId = corrId;
+                
+                props.ReplyToAddress = new PublicationAddress(ExchangeType.Topic, // TODO, is better to use one queue per publisher
+                    _requestModelPublisherRemoteProcedureCall.ExchangeName,
+                    _routingRpcReplyKey);
+
+                _model.BasicPublish(
+                    string.Empty,
+                    publishMessageToQueue.QueueName,
+                    false,
+                    props,
+                    publishMessageToQueue.Message);
+            });
             Receive<IConsumedMessage>(consumedMessage =>
             {
                 _requestModelPublisherRemoteProcedureCall.MessageConsumer.Tell(new ConsumedMessage(consumedMessage.Message, consumedMessage.BasicDeliverEventArgs));

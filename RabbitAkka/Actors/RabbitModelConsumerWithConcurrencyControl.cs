@@ -48,7 +48,8 @@ namespace RabbitAkka.Actors
         private void Ready()
         {
             _concurrencyCapacity = _requestModelConsumerWithConcurrencyControl.ConcurrencyLevel;
-            _model.QueueBind(_requestModelConsumerWithConcurrencyControl.QueueName, _requestModelConsumerWithConcurrencyControl.ExchangeName, _requestModelConsumerWithConcurrencyControl.RoutingKey);
+            if (!string.IsNullOrWhiteSpace(_requestModelConsumerWithConcurrencyControl.ExchangeName))
+                _model.QueueBind(_requestModelConsumerWithConcurrencyControl.QueueName, _requestModelConsumerWithConcurrencyControl.ExchangeName, _requestModelConsumerWithConcurrencyControl.RoutingKey);
             _consumer = new EventingBasicConsumer(_model);
             _consumer.Received += (ch, ea) =>
             {

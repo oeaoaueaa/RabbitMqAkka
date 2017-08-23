@@ -22,7 +22,8 @@ namespace RabbitAkkaConsumerWithBusyExample
                 VirtualHost = "/",
             };
 
-            const string exchangeName = "amq.topic";
+            //const string exchangeName = "amq.topic";
+            const string exchangeName = "";
             const string routingKey = "routingKey";
 
 

@@ -46,7 +46,8 @@ namespace RabbitAkka.Actors
 
         private void Ready()
         {
-            _model.QueueBind(_requestModelConsumer.QueueName, _requestModelConsumer.ExchangeName, _requestModelConsumer.RoutingKey);
+            if (!string.IsNullOrEmpty(_requestModelConsumer.ExchangeName))
+                _model.QueueBind(_requestModelConsumer.QueueName, _requestModelConsumer.ExchangeName, _requestModelConsumer.RoutingKey);
             
             _consumer = new EventingBasicConsumer(_model);
             _consumer.Received += (ch, ea) =>

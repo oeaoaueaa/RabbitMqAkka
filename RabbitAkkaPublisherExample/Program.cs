@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Akka.Actor;
 using RabbitMQ.Client;
@@ -12,7 +13,7 @@ namespace RabbitAkkaPublisherExample
     {
         static void Main(string[] args)
         {
-
+            //Thread.Sleep(TimeSpan.FromHours(1));
             ConnectionFactory factory = new ConnectionFactory
             {
                 UserName = "guest",
@@ -22,7 +23,8 @@ namespace RabbitAkkaPublisherExample
                 VirtualHost = "/",
             };
 
-            const string exchangeName = "amq.topic";
+            //const string exchangeName = "amq.topic";
+            const string exchangeName = "";
             const string routingKey = "routingKey";
 
 
@@ -33,7 +35,7 @@ namespace RabbitAkkaPublisherExample
             var requestModelPublisherActorRef =
                 rabbitConnectionActorRef.Ask<IActorRef>(new RequestModelPublisher()).Result;
 
-            var consoleOutputActorRef = actorSystem.ActorOf(ConsoleOutputActor.CreateProps());
+            var consoleOutputActorRef = actorSystem.ActorOf(ConsoleOutputActor.CreateProps());            
 
             var requestModelPublisherRemoteProcedureCallActorRef =
                 rabbitConnectionActorRef.Ask<IActorRef>(new RequestModelPublisherRemoteProcedureCall(exchangeName, routingKey, consoleOutputActorRef)).Result;
@@ -43,11 +45,29 @@ namespace RabbitAkkaPublisherExample
             {
                 if (input?.StartsWith("?", StringComparison.CurrentCultureIgnoreCase) == true)
                 {
-                    requestModelPublisherRemoteProcedureCallActorRef.Tell(new PublishMessageUsingRoutingKey(exchangeName, routingKey, Encoding.ASCII.GetBytes(input.Substring(1))));
+                    if (string.IsNullOrEmpty(exchangeName))
+                    {
+                        requestModelPublisherRemoteProcedureCallActorRef.Tell(new PublishMessageToQueue("xxx",
+                            Encoding.ASCII.GetBytes(input.Substring(1))));
+                    }
+                    else
+                    {
+                        requestModelPublisherRemoteProcedureCallActorRef.Tell(new PublishMessageUsingRoutingKey(
+                            exchangeName, routingKey, Encoding.ASCII.GetBytes(input.Substring(1))));
+                    }                    
                 }
                 else if (input != null)
                 {
-                    requestModelPublisherActorRef.Tell(new PublishMessageUsingRoutingKey(exchangeName, routingKey, Encoding.ASCII.GetBytes(input)));
+                    if (string.IsNullOrEmpty(exchangeName))
+                    {
+                        requestModelPublisherActorRef.Tell(new PublishMessageToQueue("xxx",
+                            Encoding.ASCII.GetBytes(input)));
+                    }
+                    else
+                    {
+                        requestModelPublisherActorRef.Tell(new PublishMessageUsingRoutingKey(exchangeName, routingKey,
+                            Encoding.ASCII.GetBytes(input)));
+                    }
                 }
 
                 Console.WriteLine("type message to send, prefix with [?] for rpc (enter [q] to exit)");
