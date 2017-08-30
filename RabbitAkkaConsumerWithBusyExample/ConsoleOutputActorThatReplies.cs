@@ -39,15 +39,18 @@ namespace RabbitAkkaConsumerWithBusyExample
                     if (consumedMessage.BasicDeliverEventArgs.BasicProperties.IsReplyToPresent())
                     {
                         Context.System.Scheduler.ScheduleTellOnce(TimeSpan.FromMilliseconds(_delayMs), Self,
-                            new WorkItemWithReply(DateTime.Now, messageBody, Sender, consumedMessage.BasicDeliverEventArgs.BasicProperties.ReplyToAddress), Self);                        
+                            new WorkItemWithReply(DateTime.Now, messageBody, Sender,
+                                consumedMessage.BasicDeliverEventArgs.BasicProperties.ReplyToAddress,
+                                consumedMessage.BasicDeliverEventArgs.BasicProperties.ReplyTo), Self);
                     }
                     else
                     {
                         Context.System.Scheduler.ScheduleTellOnce(TimeSpan.FromMilliseconds(_delayMs), Self,
                             new WorkItem(DateTime.Now, messageBody, Sender), Self);
                     }
-                });                
+                });
                 Receive<WorkItemWithReply>(workItemWithReply =>
+                
                 {
                     Console.WriteLine(
                         $"{_name} {workItemWithReply.Timestamp:T} received ({workItemWithReply.Message})");
@@ -56,9 +59,18 @@ namespace RabbitAkkaConsumerWithBusyExample
                     // Reply if needed
                     var replyBody = Encoding.ASCII.GetBytes($"Replying to {workItemWithReply.Message}");
 
-                    _publisherActorRef.Tell(new PublishMessageUsingPublicationAddress(
-                        workItemWithReply.BasicPropertiesReplyToAddress,
-                        replyBody));
+                    if (string.IsNullOrEmpty(workItemWithReply.ReplyTo))
+                    {
+                        _publisherActorRef.Tell(new PublishMessageUsingPublicationAddress(
+                            workItemWithReply.BasicPropertiesReplyToAddress,
+                            replyBody));
+                    }
+                    else
+                    {
+                        _publisherActorRef.Tell(new PublishMessageToQueue(
+                            workItemWithReply.ReplyTo,
+                            replyBody));
+                    }
                 });
                 Receive<WorkItem>(message =>
                 {
@@ -70,10 +82,12 @@ namespace RabbitAkkaConsumerWithBusyExample
             class WorkItemWithReply : WorkItem
             {
                 public PublicationAddress BasicPropertiesReplyToAddress { get; }
+                public string ReplyTo { get; }
 
-                public WorkItemWithReply(DateTime timestamp, string message, IActorRef sender, PublicationAddress basicPropertiesReplyToAddress) : base(timestamp, message, sender)
+                public WorkItemWithReply(DateTime timestamp, string message, IActorRef sender, PublicationAddress basicPropertiesReplyToAddress, string replyTo) : base(timestamp, message, sender)
                 {
                     BasicPropertiesReplyToAddress = basicPropertiesReplyToAddress;
+                    ReplyTo = replyTo;
                 }
             }
 

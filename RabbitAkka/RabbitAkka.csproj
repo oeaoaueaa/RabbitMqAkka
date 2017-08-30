@@ -72,6 +72,8 @@
     <Compile Include="Messages\Dtos\RequestModelPublisherRemoteProcedureCall.cs" />
     <Compile Include="Messages\IConsumedMessage.cs" />
     <Compile Include="Messages\IMessageProcessed.cs" />
+    <Compile Include="Messages\IModelRemoteProcedureCallPublisherWithDirectQueueConsumer.cs" />
+    <Compile Include="Messages\IModelRemoteProcedureCallPublisherWithTopicExchangeConsumer.cs" />
     <Compile Include="Messages\IPublishMessageToQueue.cs" />
     <Compile Include="Messages\IPublishMessageUsingPublicationAddress.cs" />
     <Compile Include="Messages\IPublishMessageUsingRoutingKey.cs" />
@@ -79,6 +81,8 @@
     <Compile Include="Messages\IRequestModelConsumerWithConcurrencyControl.cs" />
     <Compile Include="Messages\IRequestModelPublisher.cs" />
     <Compile Include="Messages\IRequestModelPublisherRemoteProcedureCall.cs" />
+    <Compile Include="Messages\Dtos\ModelRemoteProcedureCallPublisherWithDirectQueueConsumer.cs" />
+    <Compile Include="Messages\Dtos\ModelRemoteProcedureCallPublisherWithTopicExchangeConsumer.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

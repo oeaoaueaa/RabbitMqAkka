@@ -51,24 +51,49 @@ namespace RabbitAkka.Actors
             });
             Receive<IRequestModelPublisherRemoteProcedureCall>(requestModelPublisherRemoteProcedureCall =>
             {
+                IActorRef publisherActorRef;
                 var model = _conn.CreateModel();
-
                 var responseQueueName = Guid.NewGuid().ToString();
                 var routingRpcReplyKey = $"{requestModelPublisherRemoteProcedureCall.RoutingKey}###RPCReply";
 
-                var rabbitModelRemoteProcedureCallPublisherActorRef = Context.System.ActorOf(
-                    RabbitModelRemoteProcedureCallPublisher.CreateProps(model, requestModelPublisherRemoteProcedureCall, routingRpcReplyKey));
+                if (string.IsNullOrEmpty(requestModelPublisherRemoteProcedureCall.ExchangeName))
+                {                    
+                    var modelRemoteProcedureCallPublisherWithDirectQueueConsumer
+                        = new ModelRemoteProcedureCallPublisherWithDirectQueueConsumer(
+                            requestModelPublisherRemoteProcedureCall, responseQueueName);
 
+                    var rabbitModelRemoteProcedureCallPublisherActorRef = Context.System.ActorOf(
+                        RabbitModelRemoteProcedureCallPublisher.CreateProps(model,
+                            modelRemoteProcedureCallPublisherWithDirectQueueConsumer));
+
+                    publisherActorRef = rabbitModelRemoteProcedureCallPublisherActorRef;
+                }
+                else
+                {                    
+
+                    var modelRemoteProcedureCallPublisherWithTopicExchangeConsumer
+                        = new ModelRemoteProcedureCallPublisherWithTopicExchangeConsumer(
+                            requestModelPublisherRemoteProcedureCall,
+                            new PublicationAddress(ExchangeType.Topic,
+                                requestModelPublisherRemoteProcedureCall.ExchangeName, routingRpcReplyKey));
+
+                    var rabbitModelRemoteProcedureCallPublisherActorRef = Context.System.ActorOf(
+                        RabbitModelRemoteProcedureCallPublisher.CreateProps(model,
+                            modelRemoteProcedureCallPublisherWithTopicExchangeConsumer));
+
+                    publisherActorRef = rabbitModelRemoteProcedureCallPublisherActorRef;
+                }
+                
                 var requestModelConsumer = new RequestModelConsumer(
                     requestModelPublisherRemoteProcedureCall.ExchangeName,
                     responseQueueName,
                     routingRpcReplyKey,
-                    rabbitModelRemoteProcedureCallPublisherActorRef);
+                    publisherActorRef);
 
                 var rabbitModelConsumerActorRef = Context.System.ActorOf(RabbitModelConsumer.CreateProps(model, requestModelConsumer));
                 rabbitModelConsumerActorRef.Tell("start consuming");
 
-                Sender.Tell(rabbitModelRemoteProcedureCallPublisherActorRef);
+                Sender.Tell(publisherActorRef);
             });
         }
     }

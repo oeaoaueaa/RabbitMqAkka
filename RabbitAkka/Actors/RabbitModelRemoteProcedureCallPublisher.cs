@@ -9,19 +9,36 @@ namespace RabbitAkka.Actors
     public class RabbitModelRemoteProcedureCallPublisher : ReceiveActor, IWithUnboundedStash
     {
         private readonly IModel _model;
-        private readonly IRequestModelPublisherRemoteProcedureCall _requestModelPublisherRemoteProcedureCall;
-        private readonly string _routingRpcReplyKey;
+        
+        // Only one Topic or Direct config will be passed
+        private readonly IModelRemoteProcedureCallPublisherWithTopicExchangeConsumer
+            _modelRemoteProcedureCallPublisherWithTopicExchangeConsumer;
 
-        public static Props CreateProps(IModel model, IRequestModelPublisherRemoteProcedureCall requestModelPublisherRemoteProcedureCall, string routingRpcReplyKey)
+        private readonly IModelRemoteProcedureCallPublisherWithDirectQueueConsumer
+            _modelRemoteProcedureCallPublisherWithDirectQueueConsumer;
+
+        public static Props CreateProps(IModel model, IModelRemoteProcedureCallPublisherWithTopicExchangeConsumer modelRemoteProcedureCallPublisherWithTopicExchangeConsumer)
         {
-            return Props.Create<RabbitModelRemoteProcedureCallPublisher>(model, requestModelPublisherRemoteProcedureCall, routingRpcReplyKey);
+            return Props.Create<RabbitModelRemoteProcedureCallPublisher>(model, modelRemoteProcedureCallPublisherWithTopicExchangeConsumer);
         }
 
-        public RabbitModelRemoteProcedureCallPublisher(IModel model, IRequestModelPublisherRemoteProcedureCall requestModelPublisherRemoteProcedureCall, string routingRpcReplyKey)
+        public RabbitModelRemoteProcedureCallPublisher(IModel model, IModelRemoteProcedureCallPublisherWithTopicExchangeConsumer modelRemoteProcedureCallWithTopicExchangeConsumerPublisherWithTopicExchangeConsumer)
         {
             _model = model;
-            _requestModelPublisherRemoteProcedureCall = requestModelPublisherRemoteProcedureCall;
-            _routingRpcReplyKey = routingRpcReplyKey;
+            _modelRemoteProcedureCallPublisherWithTopicExchangeConsumer = modelRemoteProcedureCallWithTopicExchangeConsumerPublisherWithTopicExchangeConsumer;
+
+            Ready();
+        }
+
+        public static Props CreateProps(IModel model, IModelRemoteProcedureCallPublisherWithDirectQueueConsumer modelRemoteProcedureCallPublisherWithDirectQueueConsumer)
+        {
+            return Props.Create<RabbitModelRemoteProcedureCallPublisher>(model, modelRemoteProcedureCallPublisherWithDirectQueueConsumer);
+        }
+
+        public RabbitModelRemoteProcedureCallPublisher(IModel model, IModelRemoteProcedureCallPublisherWithDirectQueueConsumer modelRemoteProcedureCallPublisherWithDirectQueueConsumer)
+        {
+            _model = model;
+            _modelRemoteProcedureCallPublisherWithDirectQueueConsumer = modelRemoteProcedureCallPublisherWithDirectQueueConsumer;
 
             Ready();
         }
@@ -30,32 +47,18 @@ namespace RabbitAkka.Actors
         {
             Receive<IPublishMessageUsingRoutingKey>(publishMessage =>
             {
-                var corrId = Guid.NewGuid().ToString();
-                var props = _model.CreateBasicProperties();
-
-                //props.ReplyTo = _responseQueueName;
-                props.CorrelationId = corrId;
-                props.ReplyToAddress = new PublicationAddress(ExchangeType.Topic, // TODO, is better to use one queue per publisher
-                    _requestModelPublisherRemoteProcedureCall.ExchangeName,
-                    _routingRpcReplyKey);
+                var props = CreateProps();
 
                 _model.BasicPublish(
-                    _requestModelPublisherRemoteProcedureCall.ExchangeName, 
-                    _requestModelPublisherRemoteProcedureCall.RoutingKey, 
+                    publishMessage.ExchangeName,
+                    publishMessage.RoutingKey,
                     false,
                     props, 
                     publishMessage.Message);
             });
             Receive<IPublishMessageToQueue>(publishMessageToQueue =>
             {
-                var corrId = Guid.NewGuid().ToString();
-                var props = _model.CreateBasicProperties();
-                //TODO CREATE A QUEUE AND ASK TO REPLY THERE :)
-                props.CorrelationId = corrId;
-                
-                props.ReplyToAddress = new PublicationAddress(ExchangeType.Topic, // TODO, is better to use one queue per publisher
-                    _requestModelPublisherRemoteProcedureCall.ExchangeName,
-                    _routingRpcReplyKey);
+                var props = CreateProps();
 
                 _model.BasicPublish(
                     string.Empty,
@@ -66,8 +69,38 @@ namespace RabbitAkka.Actors
             });
             Receive<IConsumedMessage>(consumedMessage =>
             {
-                _requestModelPublisherRemoteProcedureCall.MessageConsumer.Tell(new ConsumedMessage(consumedMessage.Message, consumedMessage.BasicDeliverEventArgs));
+                if (_modelRemoteProcedureCallPublisherWithTopicExchangeConsumer != null)
+                {
+                    _modelRemoteProcedureCallPublisherWithTopicExchangeConsumer.RequestModelPublisherRemoteProcedureCall
+                        .MessageConsumer
+                        .Tell(new ConsumedMessage(consumedMessage.Message, consumedMessage.BasicDeliverEventArgs));
+                }
+                else
+                {
+                    _modelRemoteProcedureCallPublisherWithDirectQueueConsumer.RequestModelPublisherRemoteProcedureCall
+                        .MessageConsumer
+                        .Tell(new ConsumedMessage(consumedMessage.Message, consumedMessage.BasicDeliverEventArgs));
+                }
             });
+        }
+
+        private IBasicProperties CreateProps()
+        {
+            var corrId = Guid.NewGuid().ToString();
+            var basicProperties = _model.CreateBasicProperties();
+            basicProperties.CorrelationId = corrId;
+
+            if (_modelRemoteProcedureCallPublisherWithTopicExchangeConsumer != null)
+            {
+                basicProperties.ReplyToAddress = _modelRemoteProcedureCallPublisherWithTopicExchangeConsumer
+                    .ConsumerPublicationAddress;
+            }
+            else
+            {
+                basicProperties.ReplyTo = _modelRemoteProcedureCallPublisherWithDirectQueueConsumer.ConsumerQueueName;
+            }
+
+            return basicProperties;
         }
 
         public IStash Stash { get; set; }
