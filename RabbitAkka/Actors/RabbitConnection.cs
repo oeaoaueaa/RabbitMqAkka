@@ -25,6 +25,12 @@ namespace RabbitAkka.Actors
         private void Ready()
         {
             _conn = _connectionFactory.CreateConnection();
+            ReadyForConsumers();
+            ReadyForPublishers();
+        }
+
+        private void ReadyForConsumers()
+        {
             Receive<IRequestModelConsumer>(requestModel =>
             {
                 var model = _conn.CreateModel();
@@ -41,13 +47,20 @@ namespace RabbitAkka.Actors
 
                 Sender.Tell(rabbitModelConsumerWithConcurrencyControlActorRef);
             });
+        }
+
+        private void ReadyForPublishers()
+        {
             Receive<IRequestModelPublisher>(requestModelPublisher =>
             {
                 var model = _conn.CreateModel();
 
                 var rabbitModelPublisherActorRef = Context.System.ActorOf(RabbitModelPublisher.CreateProps(model, requestModelPublisher));
 
-                Sender.Tell(rabbitModelPublisherActorRef);
+                var supervisedActorRef =
+                    Context.System.ActorOf(RabbitActorSupervisor.CreateProps(rabbitModelPublisherActorRef));
+
+                Sender.Tell(supervisedActorRef);
             });
             Receive<IRequestModelPublisherRemoteProcedureCall>(requestModelPublisherRemoteProcedureCall =>
             {
@@ -57,7 +70,7 @@ namespace RabbitAkka.Actors
                 var routingRpcReplyKey = $"{requestModelPublisherRemoteProcedureCall.RoutingKey}###RPCReply";
 
                 if (string.IsNullOrEmpty(requestModelPublisherRemoteProcedureCall.ExchangeName))
-                {                    
+                {
                     var modelRemoteProcedureCallPublisherWithDirectQueueConsumer
                         = new ModelRemoteProcedureCallPublisherWithDirectQueueConsumer(
                             requestModelPublisherRemoteProcedureCall, responseQueueName);
@@ -69,8 +82,7 @@ namespace RabbitAkka.Actors
                     publisherActorRef = rabbitModelRemoteProcedureCallPublisherActorRef;
                 }
                 else
-                {                    
-
+                {
                     var modelRemoteProcedureCallPublisherWithTopicExchangeConsumer
                         = new ModelRemoteProcedureCallPublisherWithTopicExchangeConsumer(
                             requestModelPublisherRemoteProcedureCall,
@@ -83,7 +95,7 @@ namespace RabbitAkka.Actors
 
                     publisherActorRef = rabbitModelRemoteProcedureCallPublisherActorRef;
                 }
-                
+
                 var requestModelConsumer = new RequestModelConsumer(
                     requestModelPublisherRemoteProcedureCall.ExchangeName,
                     responseQueueName,
