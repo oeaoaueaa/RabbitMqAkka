@@ -38,6 +38,6 @@ namespace RabbitAkka.Actors
                 _model.BasicPublish(string.Empty,
                     publishMessageToQueue.QueueName, false, null, publishMessageToQueue.Message);
             });
-        }
+        }        
     }
 }

@@ -56,6 +56,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Actors\RabbitActorSupervisor.cs" />
     <Compile Include="Actors\RabbitConnection.cs" />
     <Compile Include="Actors\RabbitModelConsumer.cs" />
     <Compile Include="Actors\RabbitModelConsumerWithConcurrencyControl.cs" />
@@ -70,6 +71,8 @@
     <Compile Include="Messages\Dtos\RequestModelConsumerWithCocurrencyControl.cs" />
     <Compile Include="Messages\Dtos\RequestModelPublisher.cs" />
     <Compile Include="Messages\Dtos\RequestModelPublisherRemoteProcedureCall.cs" />
+    <Compile Include="Messages\Dtos\Supervision\PauseProcessing.cs" />
+    <Compile Include="Messages\Dtos\Supervision\ResumeProcessing.cs" />
     <Compile Include="Messages\IConsumedMessage.cs" />
     <Compile Include="Messages\IMessageProcessed.cs" />
     <Compile Include="Messages\IModelRemoteProcedureCallPublisherWithDirectQueueConsumer.cs" />
@@ -83,6 +86,8 @@
     <Compile Include="Messages\IRequestModelPublisherRemoteProcedureCall.cs" />
     <Compile Include="Messages\Dtos\ModelRemoteProcedureCallPublisherWithDirectQueueConsumer.cs" />
     <Compile Include="Messages\Dtos\ModelRemoteProcedureCallPublisherWithTopicExchangeConsumer.cs" />
+    <Compile Include="Messages\Supervision\IPauseProcessing.cs" />
+    <Compile Include="Messages\Supervision\IResumeProcessing.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
