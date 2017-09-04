@@ -8,8 +8,9 @@ using RabbitMQ.Client;
 
 namespace RabbitMqAkka.Tests
 {
+    [Timeout(3000)]
     public class RabbitConnectionTests : TestKit
-    {
+    {        
         [Test]
         public async void RequestModelConsumerTest()
         {
