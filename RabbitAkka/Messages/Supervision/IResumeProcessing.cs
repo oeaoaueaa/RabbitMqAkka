@@ -1,9 +1,6 @@
-﻿using Akka.Actor;
-
-namespace RabbitAkka.Messages.Supervision
+﻿namespace RabbitAkka.Messages.Supervision
 {
     public interface IResumeProcessing
     {
-        IActorRef DelegateActorRef { get; }
     }
 }

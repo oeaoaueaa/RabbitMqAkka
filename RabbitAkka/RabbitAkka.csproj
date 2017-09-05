@@ -73,6 +73,7 @@
     <Compile Include="Messages\Dtos\RequestModelPublisherRemoteProcedureCall.cs" />
     <Compile Include="Messages\Dtos\Supervision\PauseProcessing.cs" />
     <Compile Include="Messages\Dtos\Supervision\ResumeProcessing.cs" />
+    <Compile Include="Messages\Dtos\Supervision\ResumeProcessingWithNewActor.cs" />
     <Compile Include="Messages\IConsumedMessage.cs" />
     <Compile Include="Messages\IMessageProcessed.cs" />
     <Compile Include="Messages\IModelRemoteProcedureCallPublisherWithDirectQueueConsumer.cs" />
@@ -88,6 +89,7 @@
     <Compile Include="Messages\Dtos\ModelRemoteProcedureCallPublisherWithTopicExchangeConsumer.cs" />
     <Compile Include="Messages\Supervision\IPauseProcessing.cs" />
     <Compile Include="Messages\Supervision\IResumeProcessing.cs" />
+    <Compile Include="Messages\Supervision\IResumeProcessingWithNewActor.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

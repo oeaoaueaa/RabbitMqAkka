@@ -19,6 +19,7 @@ namespace RabbitMqAkka.Tests
             var connectionFactoryMock = new Mock<IConnectionFactory>();
             connectionFactoryMock.Setup(cf => cf.CreateConnection()).Returns(connectionMock.Object);
             var rabbitConnection = Sys.ActorOf(RabbitConnection.CreateProps(connectionFactoryMock.Object));
+            var started = await rabbitConnection.Ask("start");
 
             // Act
             var consumerActorRef = await rabbitConnection.Ask<IActorRef>(Mock.Of<IRequestModelConsumer>());
@@ -35,6 +36,7 @@ namespace RabbitMqAkka.Tests
             var connectionFactoryMock = new Mock<IConnectionFactory>();
             connectionFactoryMock.Setup(cf => cf.CreateConnection()).Returns(connectionMock.Object);
             var rabbitConnection = Sys.ActorOf(RabbitConnection.CreateProps(connectionFactoryMock.Object));
+            var started = await rabbitConnection.Ask("start");
 
             // Act
             var consumerActorRef = await rabbitConnection.Ask<IActorRef>(Mock.Of<IRequestModelConsumerWithConcurrencyControl>());
@@ -51,6 +53,7 @@ namespace RabbitMqAkka.Tests
             var connectionFactoryMock = new Mock<IConnectionFactory>();
             connectionFactoryMock.Setup(cf => cf.CreateConnection()).Returns(connectionMock.Object);
             var rabbitConnection = Sys.ActorOf(RabbitConnection.CreateProps(connectionFactoryMock.Object));
+            var started = await rabbitConnection.Ask("start");
 
             // Act
             var consumerActorRef = await rabbitConnection.Ask<IActorRef>(Mock.Of<IRequestModelPublisher>());
@@ -67,6 +70,7 @@ namespace RabbitMqAkka.Tests
             var connectionFactoryMock = new Mock<IConnectionFactory>();
             connectionFactoryMock.Setup(cf => cf.CreateConnection()).Returns(connectionMock.Object);
             var rabbitConnection = Sys.ActorOf(RabbitConnection.CreateProps(connectionFactoryMock.Object));
+            var started = await rabbitConnection.Ask("start");
 
             // Act
             var consumerActorRef = await rabbitConnection.Ask<IActorRef>(Mock.Of<IRequestModelPublisherRemoteProcedureCall>());

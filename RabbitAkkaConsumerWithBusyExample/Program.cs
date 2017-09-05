@@ -30,6 +30,7 @@ namespace RabbitAkkaConsumerWithBusyExample
             var actorSystem = ActorSystem.Create("RabbitAkkaExample");
 
             var rabbitConnectionActorRef = actorSystem.ActorOf(RabbitConnection.CreateProps(factory));
+            rabbitConnectionActorRef.Ask("start").Wait();
 
             var rabbitPublisher = rabbitConnectionActorRef.Ask<IActorRef>(new RequestModelPublisher()).Result;
 

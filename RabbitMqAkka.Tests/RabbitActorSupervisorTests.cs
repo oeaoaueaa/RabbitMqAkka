@@ -41,6 +41,25 @@ namespace RabbitMqAkka.Tests
         }
 
         [Test]
+        public void SupervisorResumesMessageForwardingToOld()
+        {
+            // Arrange
+            const string message = "anything";
+            var supervisedTestProbe = CreateTestProbe();
+            var probe = CreateTestProbe();
+            probe.Watch(supervisedTestProbe);
+            var rabbitActorSupervisor = Sys.ActorOf(RabbitActorSupervisor.CreateProps(supervisedTestProbe.Ref));
+
+            // Act
+            rabbitActorSupervisor.Tell(Mock.Of<IPauseProcessing>()); // pause
+            rabbitActorSupervisor.Tell(message);
+            rabbitActorSupervisor.Tell(Mock.Of<IResumeProcessing>());
+
+            // Assert
+            supervisedTestProbe.ExpectMsg(message);
+        }
+
+        [Test]
         public void SupervisorResumesMessageForwardingToNewDelegateAndKillsOld()
         {
             // Arrange
@@ -54,7 +73,7 @@ namespace RabbitMqAkka.Tests
             // Act
             rabbitActorSupervisor.Tell(Mock.Of<IPauseProcessing>()); // pause
             rabbitActorSupervisor.Tell(message);
-            rabbitActorSupervisor.Tell(Mock.Of<IResumeProcessing>(rp => rp.DelegateActorRef == supervisedTestProbe2.Ref));
+            rabbitActorSupervisor.Tell(Mock.Of<IResumeProcessingWithNewActor>(rp => rp.DelegateActorRef == supervisedTestProbe2.Ref));
 
             // Assert
             probe.ExpectTerminated(supervisedTestProbe1);

@@ -1,9 +1,11 @@
-﻿using Akka.Actor;
+﻿using System;
+using Akka.Actor;
 using RabbitAkka.Messages.Supervision;
 
 namespace RabbitAkka.Actors
 {
-    public class RabbitActorSupervisor : ReceiveActor, IWithUnboundedStash // TODO can be made generic?
+    // TODO can be made generic?
+    public class RabbitActorSupervisor : ReceiveActor, IWithUnboundedStash 
     {
         private IActorRef _supervisedActorRef;
 
@@ -23,20 +25,32 @@ namespace RabbitAkka.Actors
 
         private void Ready()
         {
-            Receive<IPauseProcessing>(pauseProcessing => Become(Paused));
+            Receive<IPauseProcessing>(pauseProcessing =>
+            {
+                Become(Paused);
+            });
             ReceiveAny(m => _supervisedActorRef.Forward(m));
         }
 
         private void Paused()
         {
-            Receive<IResumeProcessing>(resumeProcessing =>
+            Receive<IResumeProcessingWithNewActor>(resumeProcessing =>
             {
                 Context.System.Stop(_supervisedActorRef);
                 _supervisedActorRef = resumeProcessing.DelegateActorRef;
+                Become(Ready);
                 Stash.UnstashAll();
-                Become(Ready);                
             });
-            ReceiveAny(m => Stash.Stash()); // TODO limit number of stashed messages
+            Receive<IResumeProcessing>(resumeProcessing =>
+            {
+                Become(Ready);
+                Stash.UnstashAll();
+            });
+            ReceiveAny(m =>
+            {
+                // TODO limit number of stashed messages to avoid overflows
+                Stash.Stash();
+            }); 
         }
     }
 }
