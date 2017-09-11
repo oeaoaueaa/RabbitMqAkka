@@ -52,6 +52,7 @@ namespace RabbitAkka.Actors
             _consumer = new EventingBasicConsumer(_model);
             _consumer.Received += (ch, ea) =>
             {
+                _model.BasicAck(ea.DeliveryTag, false);
                 _self.Tell(ea);
             };
             
