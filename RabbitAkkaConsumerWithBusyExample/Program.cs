@@ -32,7 +32,7 @@ namespace RabbitAkkaConsumerWithBusyExample
             var rabbitConnectionActorRef = actorSystem.ActorOf(RabbitConnection.CreateProps(factory));
             rabbitConnectionActorRef.Ask("start").Wait();
 
-            var rabbitPublisher = rabbitConnectionActorRef.Ask<IActorRef>(new RequestModelPublisher()).Result;
+            var rabbitPublisher = rabbitConnectionActorRef.Ask<IActorRef>(new RequestModelPublisher(true)).Result;
 
             var consoleOutputOne = actorSystem.ActorOf(ConsoleOutputActorThatReplies.CreateProps("One", 3000, rabbitPublisher));
             var consoleOutputTwo = actorSystem.ActorOf(ConsoleOutputActorThatReplies.CreateProps("Two", 6000, rabbitPublisher));

@@ -2,6 +2,6 @@
 {
     public interface IRequestModelPublisher
     {
-        
+        bool WaitForPublishAcks { get; }
     }
 }

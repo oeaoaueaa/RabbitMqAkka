@@ -34,7 +34,7 @@ namespace RabbitAkkaPublisherExample
             rabbitConnectionActorRef.Ask("start").Wait();
 
             var requestModelPublisherActorRef =
-                rabbitConnectionActorRef.Ask<IActorRef>(new RequestModelPublisher()).Result;
+                rabbitConnectionActorRef.Ask<IActorRef>(new RequestModelPublisher(true)).Result;
 
             var consoleOutputActorRef = actorSystem.ActorOf(ConsoleOutputActor.CreateProps());            
 
