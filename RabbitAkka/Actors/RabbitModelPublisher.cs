@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 using Akka.Actor;
 using RabbitAkka.Messages;
 using RabbitMQ.Client;
@@ -6,11 +8,13 @@ using RabbitMQ.Client.Events;
 
 namespace RabbitAkka.Actors
 {
-    public class RabbitModelPublisher : ReceiveActor, IWithUnboundedStash
+    public class RabbitModelPublisher : ReceiveActor
     {
         private readonly IModel _model;
         private readonly IRequestModelPublisher _requestModelPublisher;
-        private IActorRef _self;        
+        private IActorRef _self;
+        private readonly Dictionary<ulong, MessageWaitingForAck> _messagesWaitingForAcks;
+        private readonly TimeSpan _ackTimeout;
 
         public static Props CreateProps(IModel model, IRequestModelPublisher requestModelPublisher)
         {
@@ -28,69 +32,101 @@ namespace RabbitAkka.Actors
                 _model.BasicAcks +=
                     (sender, args) =>
                     {
-                        Console.WriteLine(
-                            $"{nameof(RabbitModelPublisher)}: BasicAck: {args.DeliveryTag} {args.Multiple}"); // TODO DEBUG REMOVE
                         _self.Tell(args, null);
                     };
             }
+
+            _messagesWaitingForAcks = new Dictionary<ulong, MessageWaitingForAck>();
+
+            _ackTimeout = requestModelPublisher.AckTimeout;
 
             Ready();
         }
 
         private void Ready()
         {
-            void WaitForAckIfNeeded()
+            Task<bool> WaitForAckIfNeeded(ulong publishSeqNo)
             {
                 if (_requestModelPublisher.WaitForPublishAcks)
                 {
-                    Become(WaitingForAck);
+                    var completionSource = new TaskCompletionSource<bool>();
+
+                    var cancelable =
+                        Context.System.Scheduler.ScheduleTellOnceCancelable(_ackTimeout, Self, publishSeqNo, null);
+                    var messageWaitingForAck = new MessageWaitingForAck(completionSource, cancelable);
+                    _messagesWaitingForAcks.Add(publishSeqNo, messageWaitingForAck);
+                    return completionSource.Task;
+                }
+                else
+                {
+                    return Task.FromResult(true);
                 }
             }
 
             Receive<IPublishMessageUsingRoutingKey>(publishMessageUsingRoutingKey =>
             {
+                var publishSeqNo = _model.NextPublishSeqNo;
                 _model.BasicPublish(publishMessageUsingRoutingKey.ExchangeName,
                     publishMessageUsingRoutingKey.RoutingKey, false, null, publishMessageUsingRoutingKey.Message);
-                WaitForAckIfNeeded();
+                Sender.Tell(WaitForAckIfNeeded(publishSeqNo));
             });
+
             Receive<IPublishMessageUsingPublicationAddress>(publishMessageUsingPublicationAddress =>
             {
+                var publishSeqNo = _model.NextPublishSeqNo;
                 // TODO needs correlation id!
                 _model.BasicPublish(publishMessageUsingPublicationAddress.PublicationAddress, null,
                     publishMessageUsingPublicationAddress.Message);
-                WaitForAckIfNeeded();
+                Sender.Tell(WaitForAckIfNeeded(publishSeqNo));
             });
+
             Receive<IPublishMessageToQueue>(publishMessageToQueue =>
             {
+                var publishSeqNo = _model.NextPublishSeqNo;
                 _model.BasicPublish(string.Empty,
                     publishMessageToQueue.QueueName, false, null, publishMessageToQueue.Message);
-                WaitForAckIfNeeded();
+                Sender.Tell(WaitForAckIfNeeded(publishSeqNo));
             });
-        }
 
-
-        #region WaitingForAck
-
-        private void WaitingForAck()
-        {
-            // TODO schedule timeout!
             Receive<BasicAckEventArgs>(basicAckEventArgs =>
             {
-                if (_model.NextPublishSeqNo -1 <= basicAckEventArgs.DeliveryTag) // only one deliver at a time
+                if (_messagesWaitingForAcks.TryGetValue(basicAckEventArgs.DeliveryTag,
+                    out MessageWaitingForAck messageWaitingForAck))
                 {
-                    Become(Ready);
-                    Stash.UnstashAll();
+                    _messagesWaitingForAcks.Remove(basicAckEventArgs.DeliveryTag);
+
+                    messageWaitingForAck.CancelableRetry.Cancel();
+                    messageWaitingForAck.TaskCompletionSource.SetResult(true);
                 }
             });
-            ReceiveAny(message => Stash.Stash());
+
+            Receive<ulong>(timedOutMessagePublishSeqNo =>
+            {
+                if (_messagesWaitingForAcks.TryGetValue(timedOutMessagePublishSeqNo,
+                    out MessageWaitingForAck messageWaitingForAck))
+                {
+                    _messagesWaitingForAcks.Remove(timedOutMessagePublishSeqNo);
+                    messageWaitingForAck.TaskCompletionSource.SetException(new TimeoutException(
+                        $"Message with publishSeqNo={timedOutMessagePublishSeqNo} timed out after {_ackTimeout}."));
+                }
+            });
         }
-        #endregion WaitingForAck
 
         protected override void PreStart()
         {
             _self = Self;
         }
 
-        public IStash Stash { get; set; }
+        class MessageWaitingForAck
+        {
+            public MessageWaitingForAck(TaskCompletionSource<bool> taskCompletionSource, ICancelable cancelableRetry)
+            {
+                TaskCompletionSource = taskCompletionSource;
+                CancelableRetry = cancelableRetry;
+            }
+
+            public TaskCompletionSource<bool> TaskCompletionSource { get; }
+            public ICancelable CancelableRetry { get; }
+        }
     }
 }

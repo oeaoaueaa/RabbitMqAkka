@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Linq.Expressions;
+using System.Threading.Tasks;
 using Akka.Actor;
 using Akka.TestKit.NUnit;
 using Moq;
@@ -100,16 +101,17 @@ namespace RabbitMqAkka.Tests
         #region With Ack
 
         [Test]
-        public void PublishMessageUsingRoutingKeyWithAckWaitsForAckTest()
+        public async Task PublishMessageUsingRoutingKeyWithAckWaitsForAckTest()
         {
             // Arrange 
             byte[] message1Body = {0xBE, 0xBE};
             byte[] message2Body = {0xFE, 0x00};
             var routingKeyTest = "routingkeytest";
             var exchangeNameTest = "exchangenametest";
+            ulong nextPublishSeqNo = 776;
 
             var modelMock = new Mock<IModel>();
-            modelMock.Setup(m => m.NextPublishSeqNo).Returns(777);
+            modelMock.Setup(m => m.NextPublishSeqNo).Returns(() => nextPublishSeqNo++);
 
             Expression<Action<IModel>> message1PublishAction = m => m.BasicPublish(exchangeNameTest, routingKeyTest,
                 It.IsAny<bool>(), It.IsAny<IBasicProperties>(), message1Body);
@@ -121,7 +123,7 @@ namespace RabbitMqAkka.Tests
             modelMock.Setup(message2PublishAction)
                 .Verifiable("Message 2 was not published");
 
-            var requestModelPublisher = Mock.Of<IRequestModelPublisher>(rmp => rmp.WaitForPublishAcks == true);
+            var requestModelPublisher = Mock.Of<IRequestModelPublisher>(rmp => rmp.WaitForPublishAcks == true && rmp.AckTimeout == TimeSpan.FromSeconds(10));
             var rabbitModelPublisher = Sys.ActorOf(RabbitModelPublisher.CreateProps(modelMock.Object, requestModelPublisher));
 
             var publishMessage1UsingRoutingKey = Mock.Of<IPublishMessageUsingRoutingKey>(pmurk =>
@@ -135,12 +137,14 @@ namespace RabbitMqAkka.Tests
                 && pmurk.Message == message2Body);
 
             // Act
-            rabbitModelPublisher.Tell(publishMessage1UsingRoutingKey);
-            rabbitModelPublisher.Tell(publishMessage2UsingRoutingKey);
+            var message1Task = await rabbitModelPublisher.Ask<Task<bool>>(publishMessage1UsingRoutingKey);
+            var message2Task = await rabbitModelPublisher.Ask<Task<bool>>(publishMessage2UsingRoutingKey);
 
             // Assert
             AwaitAssert(() => modelMock.Verify(message1PublishAction, Times.Once), TimeSpan.FromSeconds(5), TimeSpan.FromMilliseconds(100));
-            AwaitAssert(() => modelMock.Verify(message2PublishAction, Times.Never), TimeSpan.FromSeconds(5), TimeSpan.FromMilliseconds(100));
+            AwaitAssert(() => modelMock.Verify(message2PublishAction, Times.Once), TimeSpan.FromSeconds(5), TimeSpan.FromMilliseconds(100));
+            Assert.IsFalse(message1Task.IsCompleted);
+            Assert.IsFalse(message2Task.IsCompleted);
 
             // Act Ack
             modelMock.Raise(m => m.BasicAcks += null, new BasicAckEventArgs{DeliveryTag = 776});
@@ -148,19 +152,23 @@ namespace RabbitMqAkka.Tests
             // Assert
             AwaitAssert(() => modelMock.Verify(message1PublishAction, Times.Once), TimeSpan.FromSeconds(5), TimeSpan.FromMilliseconds(100));
             AwaitAssert(() => modelMock.Verify(message2PublishAction, Times.Once), TimeSpan.FromSeconds(5), TimeSpan.FromMilliseconds(100));
+            Assert.IsTrue(message1Task.IsCompleted);
+            Assert.IsTrue(message1Task.Result);
+            Assert.IsFalse(message2Task.IsCompleted);
         }
 
         [Test]
-        public void PublishMessageUsingRoutingKeyWithAckWaitsForAckWithCorrectSequenceTest()
+        public async Task PublishMessageUsingRoutingKeyWithAckWaitsForAckIgnoringOrderTest()
         {
             // Arrange 
             byte[] message1Body = { 0xBE, 0xBE };
             byte[] message2Body = { 0xFE, 0x00 };
             var routingKeyTest = "routingkeytest";
             var exchangeNameTest = "exchangenametest";
+            ulong nextPublishSeqNo = 776;
 
             var modelMock = new Mock<IModel>();
-            modelMock.Setup(m => m.NextPublishSeqNo).Returns(777);
+            modelMock.Setup(m => m.NextPublishSeqNo).Returns(() => nextPublishSeqNo++);
 
             Expression<Action<IModel>> message1PublishAction = m => m.BasicPublish(exchangeNameTest, routingKeyTest,
                 It.IsAny<bool>(), It.IsAny<IBasicProperties>(), message1Body);
@@ -172,7 +180,7 @@ namespace RabbitMqAkka.Tests
             modelMock.Setup(message2PublishAction)
                 .Verifiable("Message 2 was not published");
 
-            var requestModelPublisher = Mock.Of<IRequestModelPublisher>(rmp => rmp.WaitForPublishAcks == true);
+            var requestModelPublisher = Mock.Of<IRequestModelPublisher>(rmp => rmp.WaitForPublishAcks == true && rmp.AckTimeout == TimeSpan.FromSeconds(10));
             var rabbitModelPublisher = Sys.ActorOf(RabbitModelPublisher.CreateProps(modelMock.Object, requestModelPublisher));
 
             var publishMessage1UsingRoutingKey = Mock.Of<IPublishMessageUsingRoutingKey>(pmurk =>
@@ -186,19 +194,115 @@ namespace RabbitMqAkka.Tests
                 && pmurk.Message == message2Body);
 
             // Act
-            rabbitModelPublisher.Tell(publishMessage1UsingRoutingKey);
-            rabbitModelPublisher.Tell(publishMessage2UsingRoutingKey);
+            var message1Task = await rabbitModelPublisher.Ask<Task<bool>>(publishMessage1UsingRoutingKey);
+            var message2Task = await rabbitModelPublisher.Ask<Task<bool>>(publishMessage2UsingRoutingKey);
 
             // Assert
             AwaitAssert(() => modelMock.Verify(message1PublishAction, Times.Once), TimeSpan.FromSeconds(5), TimeSpan.FromMilliseconds(100));
-            AwaitAssert(() => modelMock.Verify(message2PublishAction, Times.Never), TimeSpan.FromSeconds(5), TimeSpan.FromMilliseconds(100));
+            AwaitAssert(() => modelMock.Verify(message2PublishAction, Times.Once), TimeSpan.FromSeconds(5), TimeSpan.FromMilliseconds(100));
+            Assert.IsFalse(message1Task.IsCompleted);
+            Assert.IsFalse(message2Task.IsCompleted);
 
             // Act Ack
-            modelMock.Raise(m => m.BasicAcks += null, new BasicAckEventArgs { DeliveryTag = 775 }); // should equals or bigger than 776
+            modelMock.Raise(m => m.BasicAcks += null, new BasicAckEventArgs { DeliveryTag = 777 });
 
             // Assert
             AwaitAssert(() => modelMock.Verify(message1PublishAction, Times.Once), TimeSpan.FromSeconds(5), TimeSpan.FromMilliseconds(100));
-            AwaitAssert(() => modelMock.Verify(message2PublishAction, Times.Never), TimeSpan.FromSeconds(5), TimeSpan.FromMilliseconds(100));
+            AwaitAssert(() => modelMock.Verify(message2PublishAction, Times.Once), TimeSpan.FromSeconds(5), TimeSpan.FromMilliseconds(100));
+            Assert.IsFalse(message1Task.IsCompleted);            
+            Assert.IsTrue(message2Task.IsCompleted);
+            Assert.IsTrue(message2Task.Result);
+        }
+
+        [Test]
+        public async Task PublishMessageUsingRoutingKeyWithAckWaitsForAckWithCorrectSequenceTest()
+        {
+            // Arrange 
+            byte[] message1Body = { 0xBE, 0xBE };
+            byte[] message2Body = { 0xFE, 0x00 };
+            var routingKeyTest = "routingkeytest";
+            var exchangeNameTest = "exchangenametest";
+            ulong nextPublishSeqNo = 776;
+
+            var modelMock = new Mock<IModel>();
+            modelMock.Setup(m => m.NextPublishSeqNo).Returns(() => nextPublishSeqNo++);
+
+            Expression<Action<IModel>> message1PublishAction = m => m.BasicPublish(exchangeNameTest, routingKeyTest,
+                It.IsAny<bool>(), It.IsAny<IBasicProperties>(), message1Body);
+            modelMock.Setup(message1PublishAction)
+                .Verifiable("Message 1 was not published");
+
+            Expression<Action<IModel>> message2PublishAction = m => m.BasicPublish(exchangeNameTest, routingKeyTest,
+                It.IsAny<bool>(), It.IsAny<IBasicProperties>(), message2Body);
+            modelMock.Setup(message2PublishAction)
+                .Verifiable("Message 2 was not published");
+
+            var requestModelPublisher = Mock.Of<IRequestModelPublisher>(rmp => rmp.WaitForPublishAcks == true && rmp.AckTimeout == TimeSpan.FromSeconds(10));
+            var rabbitModelPublisher = Sys.ActorOf(RabbitModelPublisher.CreateProps(modelMock.Object, requestModelPublisher));
+
+            var publishMessage1UsingRoutingKey = Mock.Of<IPublishMessageUsingRoutingKey>(pmurk =>
+                pmurk.RoutingKey == routingKeyTest
+                && pmurk.ExchangeName == exchangeNameTest
+                && pmurk.Message == message1Body);
+
+            var publishMessage2UsingRoutingKey = Mock.Of<IPublishMessageUsingRoutingKey>(pmurk =>
+                pmurk.RoutingKey == routingKeyTest
+                && pmurk.ExchangeName == exchangeNameTest
+                && pmurk.Message == message2Body);
+
+            // Act
+            var message1Task = await rabbitModelPublisher.Ask<Task<bool>>(publishMessage1UsingRoutingKey);
+            var message2Task = await rabbitModelPublisher.Ask<Task<bool>>(publishMessage2UsingRoutingKey);
+
+            // Assert
+            AwaitAssert(() => modelMock.Verify(message1PublishAction, Times.Once), TimeSpan.FromSeconds(5), TimeSpan.FromMilliseconds(100));
+            AwaitAssert(() => modelMock.Verify(message2PublishAction, Times.Once), TimeSpan.FromSeconds(5), TimeSpan.FromMilliseconds(100));
+            Assert.IsFalse(message1Task.IsCompleted);
+            Assert.IsFalse(message2Task.IsCompleted);
+
+            // Act Ack
+            modelMock.Raise(m => m.BasicAcks += null, new BasicAckEventArgs { DeliveryTag = 775 }); // we have published 766 and 777
+
+            // Assert
+            AwaitAssert(() => modelMock.Verify(message1PublishAction, Times.Once), TimeSpan.FromSeconds(5), TimeSpan.FromMilliseconds(100));
+            AwaitAssert(() => modelMock.Verify(message2PublishAction, Times.Once), TimeSpan.FromSeconds(5), TimeSpan.FromMilliseconds(100));
+            Assert.IsFalse(message1Task.IsCompleted);
+            Assert.IsFalse(message2Task.IsCompleted);
+        }
+
+        [Test]
+        public async Task PublishMessageUsingRoutingKeyWithAckWaitsForAckAndTimeouts()
+        {
+            // Arrange 
+            byte[] message1Body = { 0xBE, 0xBE };
+            var routingKeyTest = "routingkeytest";
+            var exchangeNameTest = "exchangenametest";
+            ulong nextPublishSeqNo = 776;
+
+            var modelMock = new Mock<IModel>();
+            modelMock.Setup(m => m.NextPublishSeqNo).Returns(() => nextPublishSeqNo++);
+
+            Expression<Action<IModel>> message1PublishAction = m => m.BasicPublish(exchangeNameTest, routingKeyTest,
+                It.IsAny<bool>(), It.IsAny<IBasicProperties>(), message1Body);
+            modelMock.Setup(message1PublishAction)
+                .Verifiable("Message 1 was not published");
+
+            var requestModelPublisher =
+                Mock.Of<IRequestModelPublisher>(rmp => rmp.WaitForPublishAcks == true &&
+                                                       rmp.AckTimeout == TimeSpan.FromSeconds(1));
+            var rabbitModelPublisher = Sys.ActorOf(RabbitModelPublisher.CreateProps(modelMock.Object, requestModelPublisher));
+
+            var publishMessage1UsingRoutingKey = Mock.Of<IPublishMessageUsingRoutingKey>(pmurk =>
+                pmurk.RoutingKey == routingKeyTest
+                && pmurk.ExchangeName == exchangeNameTest
+                && pmurk.Message == message1Body);
+
+            // Act
+            var message1Task = await rabbitModelPublisher.Ask<Task<bool>>(publishMessage1UsingRoutingKey);
+
+            // Assert
+            AwaitAssert(() => modelMock.Verify(message1PublishAction, Times.Once), TimeSpan.FromSeconds(5), TimeSpan.FromMilliseconds(100));
+            AwaitAssert(() => Assert.IsTrue(message1Task.IsFaulted), TimeSpan.FromMilliseconds(1100), TimeSpan.FromMilliseconds(100));
         }
 
         #endregion

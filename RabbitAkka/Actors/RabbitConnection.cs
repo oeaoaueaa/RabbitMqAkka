@@ -28,22 +28,17 @@ namespace RabbitAkka.Actors
             _publishersActorRefs = new List<IActorRef>();
             _consumersActorRefs = new List<IActorRef>();
 
-            AwaitingInitialization();
+            Become(Ready);
         }
 
-        private void AwaitingInitialization()
+        protected override void PreStart()
         {
-            ReceiveAny(m =>
-            {
-                var self = Context.Self;
-                // TODO dispose previous conn
-                _conn = _connectionFactory.CreateConnection();
-                _conn.ConnectionShutdown += (sender, args) => { self.Tell(new ConnectionShutdown(args)); };
-                _conn.RecoverySucceeded += (sender, args) => { self.Tell(new ConnectionRecoverySucceeded()); };
-
-                Become(Ready);
-                Sender.Tell(true);
-            });
+            var self = Context.Self;
+            // TODO dispose previous conn if any
+            _conn = _connectionFactory.CreateConnection();
+            // TODO dispose event handlers
+            _conn.ConnectionShutdown += (sender, args) => { self.Tell(new ConnectionShutdown(args)); };
+            _conn.RecoverySucceeded += (sender, args) => { self.Tell(new ConnectionRecoverySucceeded()); };            
         }
 
         private void Ready()

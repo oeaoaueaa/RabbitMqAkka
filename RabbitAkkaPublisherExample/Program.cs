@@ -31,10 +31,9 @@ namespace RabbitAkkaPublisherExample
             var actorSystem = ActorSystem.Create("RabbitAkkaExample");
 
             var rabbitConnectionActorRef = actorSystem.ActorOf(RabbitConnection.CreateProps(factory));
-            rabbitConnectionActorRef.Ask("start").Wait();
 
             var requestModelPublisherActorRef =
-                rabbitConnectionActorRef.Ask<IActorRef>(new RequestModelPublisher(true)).Result;
+                rabbitConnectionActorRef.Ask<IActorRef>(new RequestModelPublisher(true, TimeSpan.FromSeconds(10))).Result;
 
             var consoleOutputActorRef = actorSystem.ActorOf(ConsoleOutputActor.CreateProps());            
 
@@ -44,33 +43,43 @@ namespace RabbitAkkaPublisherExample
             string input = null;
             do
             {
+                Task<bool> publishTask = null;
                 if (input?.StartsWith("?", StringComparison.CurrentCultureIgnoreCase) == true)
                 {
                     if (string.IsNullOrEmpty(exchangeName))
                     {
-                        requestModelPublisherRemoteProcedureCallActorRef.Tell(new PublishMessageToQueue("xxx",
-                            Encoding.ASCII.GetBytes(input.Substring(1))));
+                        publishTask = requestModelPublisherRemoteProcedureCallActorRef.Ask<Task<bool>>(new PublishMessageToQueue(
+                            "xxx",
+                            Encoding.ASCII.GetBytes(input.Substring(1)))).Result;
                     }
                     else
                     {
-                        requestModelPublisherRemoteProcedureCallActorRef.Tell(new PublishMessageUsingRoutingKey(
-                            exchangeName, routingKey, Encoding.ASCII.GetBytes(input.Substring(1))));
+                        publishTask = requestModelPublisherRemoteProcedureCallActorRef.Ask<Task<bool>>(new PublishMessageUsingRoutingKey(
+                            exchangeName, routingKey, Encoding.ASCII.GetBytes(input.Substring(1)))).Result;
                     }                    
                 }
                 else if (input != null)
                 {
                     if (string.IsNullOrEmpty(exchangeName))
                     {
-                        requestModelPublisherActorRef.Tell(new PublishMessageToQueue("xxx",
-                            Encoding.ASCII.GetBytes(input)));
+                        publishTask = requestModelPublisherActorRef.Ask<Task<bool>>(new PublishMessageToQueue("xxx",
+                            Encoding.ASCII.GetBytes(input))).Result;
                     }
                     else
                     {
-                        requestModelPublisherActorRef.Tell(new PublishMessageUsingRoutingKey(exchangeName, routingKey,
-                            Encoding.ASCII.GetBytes(input)));
+                        publishTask = requestModelPublisherActorRef.Ask<Task<bool>>(new PublishMessageUsingRoutingKey(exchangeName, routingKey,
+                            Encoding.ASCII.GetBytes(input))).Result;
                     }
                 }
 
+                if (publishTask != null)
+                {
+                    var messageInput = input;
+                    publishTask.ContinueWith(_ => Console.WriteLine($"Published {messageInput}"),
+                        TaskContinuationOptions.OnlyOnRanToCompletion | TaskContinuationOptions.AttachedToParent);
+                    publishTask.ContinueWith(_ => Console.WriteLine($"Could not publish {messageInput}"),
+                        TaskContinuationOptions.OnlyOnFaulted | TaskContinuationOptions.AttachedToParent);
+                }
                 Console.WriteLine("type message to send, prefix with [?] for rpc (enter [q] to exit)");
                 input = Console.ReadLine();                
             } while (!"q".Equals(input, StringComparison.CurrentCultureIgnoreCase));
